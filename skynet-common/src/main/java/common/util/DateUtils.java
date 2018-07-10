@@ -1,7 +1,7 @@
 /**
  * Copyright &copy; 2015-2020 <a href="http://www.jeeplus.org/">JeePlus</a> All rights reserved.
  */
-package com.skynet.common.util;
+package common.util;
 
 import org.apache.commons.lang3.time.DateFormatUtils;
 

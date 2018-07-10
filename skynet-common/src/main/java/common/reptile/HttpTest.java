@@ -1,4 +1,4 @@
-package com.skynet.common.reptile;
+package common.reptile;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;

@@ -1,4 +1,4 @@
-package com.skynet.common.propertie;
+package common.propertie;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
