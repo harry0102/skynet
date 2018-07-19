@@ -19,15 +19,25 @@ package common.util.c2xml.entity;
  * @since 1.0.0
  */
 public class MappingBean {
+
     String mapid;
+
     String action;
+
     String elementType;
+
     String elementID;
+
     String elementCode;
+
     String parentType;
+
     String parentID;
+
     String parentCode;
+
     String Type;
+
     String Sequence;
 
     public MappingBean(String mapid, String action, String elementType, String elementID, String elementCode, String parentType, String parentID, String parentCode, String type, String sequence) {
