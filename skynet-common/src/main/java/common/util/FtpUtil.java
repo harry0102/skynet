@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,7 +45,7 @@ public class FtpUtil {
 
     public static void main(String[] args) throws Exception {
 
-        String sourcePath = "D:\\迅雷下载\\视频文件\\西游记01.mp4";
+        String sourcePath = "D:\\迅雷下载\\视频文件\\";
         String remotePath = "/AAA杭州cp/scan/";
         String remoteFileName = "西游记.mp4";
 
@@ -56,12 +57,13 @@ public class FtpUtil {
         FtpUtil ftpUtil = new FtpUtil(ftp);
         ftpUtil.upload(sourcePath, remotePath, remoteFileName);
         closeFtp();
-//        List<File> list = new ArrayList<>();
-//        List<File> files = getFiles(sourcePath, list);
-//        for (File f : files) {
-//            System.out.println("+++" + f.getPath());
-//
-//        }
+        List<File> list = new ArrayList<>();
+        List<File> files = getFiles(sourcePath, list);
+        for (File f : files) {
+            System.out.println(">>"+f.getParent());
+            System.out.println("+++" + f.getPath());
+
+        }
 
     }
 
