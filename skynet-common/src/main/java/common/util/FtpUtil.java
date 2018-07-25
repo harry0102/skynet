@@ -34,8 +34,8 @@ public class FtpUtil {
     private static final Logger logger = LoggerFactory.getLogger(FtpUtil.class);
     private static final String UTF_8 = "utf-8";
     private static final String ISO_8859_1 = "iso-8859-1";
-    private static final int TRANSTIMEOUT = 5*60*60*1000;
-    private static final int CONNECTTIMEOUT = 30*60*1000;
+    private static final int TRANSTIMEOUT = 5 * 60 * 60 * 1000;
+    private static final int CONNECTTIMEOUT = 30 * 60 * 1000;
 
 
     private static FTPClient ftpClient;
@@ -47,9 +47,8 @@ public class FtpUtil {
     public static void main(String[] args) throws Exception {
 
 
-        String sourcePath = "D:\\迅雷下载\\视频文件\\西游记01.mp4";
-        String remotePath = "/AAA杭州cp/scan";
-        String remoteFileName = "西游记.mp4";
+        String sourcePath = "D:\\迅雷下载\\视频文件\\";
+        String remotePath = "/AAA杭州cp/scan/";
 
         Ftp ftp = new Ftp();
         ftp.setIp("192.168.4.53");
@@ -57,16 +56,17 @@ public class FtpUtil {
         ftp.setPassWord("vspukka");
 
         FtpUtil ftpUtil = new FtpUtil(ftp);
-        ftpUtil.upload(sourcePath, remotePath, remoteFileName);
-        closeFtp();
 
-//        List<File> list = new ArrayList<>();
-//        List<File> files = getFiles(sourcePath, list);
-//        for (File f : files) {
-//            System.out.println(">>"+f.getParent());
-//            System.out.println("+++" + f.getPath());
-//
-//        }
+        List<File> list = new ArrayList<>();
+        List<File> files = getFiles(sourcePath, list);
+        for (File f : files) {
+            String path = f.getPath();
+            String remoteFileName = f.getName();
+
+            ftpUtil.upload(path, remotePath, remoteFileName);
+
+        }
+        closeFtp();
 
     }
 
@@ -95,6 +95,7 @@ public class FtpUtil {
         ftpClient.setConnectTimeout(CONNECTTIMEOUT);
         ftpClient.enterLocalActiveMode();//主动模式
 //        ftpClient.enterLocalPassiveMode();//被动模式
+
         ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
         ftpClient.setFileTransferMode(FTPClient.STREAM_TRANSFER_MODE);
         reply = ftpClient.getReplyCode();
@@ -264,7 +265,15 @@ public class FtpUtil {
      * @param remotePath
      * @param remoteFileName
      * @return boolean
-     * @descrption 本地文件上传到指定ftp目录
+     * @descrption
+     * 本地文件上传到指定ftp目录
+     *
+     * commons-net的FTPClient，在使用public InputStream retrieveFileStream(String remote)
+     * 方法时需要特别注意，在调用这个接口后，一定要手动close掉返回的InputStream，然后再调用completePendingCommand方法，若不是按照这个顺序，则不对，伪代码：
+     * InputStream is = ftpClient.retrieveFileStream(remote);
+     * is.close();
+     * ftpClient.completePendingCommand();
+     * 参考链接 https://blog.csdn.net/wangjian5748/article/details/3404619
      * @author MingRuiRen
      * @date 2018/7/25 13:50
      */
@@ -278,27 +287,29 @@ public class FtpUtil {
             //本地文件长度(字节)
             long localFileSize = getFileSize(localFile);
 
-            if(!remotePath.startsWith("/")){
-                remotePath="/"+remotePath;
+            if (!remotePath.startsWith("/")) {
+                remotePath = "/" + remotePath;
             }
-            if(!remotePath.endsWith("/")){
-                remotePath=remotePath+"/";
+            if (!remotePath.endsWith("/")) {
+                remotePath = remotePath + "/";
             }
 
             //远程文件大小(字节)
             long remoteSize = getFtpFileSize(remotePath, remoteFileName);
+            if (remoteSize == localFileSize) {
+                return false;
+            }
 
             Long buffer = 1024 * 10L;
             ftpClient.setBufferSize(buffer.intValue());
             String remote = remotePath + remoteFileName;
 
-            raf = new RandomAccessFile(localFile, "rw");
+            raf = new RandomAccessFile(localFile, "r");
 
             //打印上传进度
             long process = 0L;
             long localreadbytes = remoteSize;
             long step = localFileSize / 100;
-
             ftpOut = ftpClient.appendFileStream(strUnicode(remote, UTF_8, ISO_8859_1));
             if (remoteSize > 0) {
                 ftpClient.setRestartOffset(remoteSize);
@@ -327,11 +338,13 @@ public class FtpUtil {
             logger.error("上传文件到FTP异常！", e);
         } finally {
             try {
+
                 if (null != raf) {
                     raf.close();
                 }
                 if (null != ftpOut) {
                     ftpOut.close();
+                    ftpClient.completePendingCommand();
                 }
 
             } catch (Exception e) {
