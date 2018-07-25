@@ -13,6 +13,7 @@ package common.util;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
+import org.jcp.xml.dsig.internal.SignerOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,8 +46,9 @@ public class FtpUtil {
 
     public static void main(String[] args) throws Exception {
 
-        String sourcePath = "D:\\迅雷下载\\视频文件\\";
-        String remotePath = "/AAA杭州cp/scan/";
+
+        String sourcePath = "D:\\迅雷下载\\视频文件\\西游记01.mp4";
+        String remotePath = "/AAA杭州cp/scan";
         String remoteFileName = "西游记.mp4";
 
         Ftp ftp = new Ftp();
@@ -57,13 +59,14 @@ public class FtpUtil {
         FtpUtil ftpUtil = new FtpUtil(ftp);
         ftpUtil.upload(sourcePath, remotePath, remoteFileName);
         closeFtp();
-        List<File> list = new ArrayList<>();
-        List<File> files = getFiles(sourcePath, list);
-        for (File f : files) {
-            System.out.println(">>"+f.getParent());
-            System.out.println("+++" + f.getPath());
 
-        }
+//        List<File> list = new ArrayList<>();
+//        List<File> files = getFiles(sourcePath, list);
+//        for (File f : files) {
+//            System.out.println(">>"+f.getParent());
+//            System.out.println("+++" + f.getPath());
+//
+//        }
 
     }
 
@@ -84,7 +87,7 @@ public class FtpUtil {
         } else {
             ftpClient.connect(ftp.getIp(), ftp.getPort());
         }
-        ftpClient.setControlEncoding("gb2312");
+        ftpClient.setControlEncoding("utf-8");
         ftpClient.login(ftp.getUserName(), ftp.getPassWord());
         //设置传输超时时间为5H
         ftpClient.setDataTimeout(TRANSTIMEOUT);
@@ -166,6 +169,7 @@ public class FtpUtil {
 
         String d;
         try {
+
             //目录编码，解决中文路径问题
             d = new String(strUnicode(dir.toString(), UTF_8, ISO_8859_1));
             //尝试切入目录
@@ -231,6 +235,7 @@ public class FtpUtil {
         logger.info("FtpUtil.getFtpFileSize, remoteDir={},remoteFileName={}", remoteDir, remoteFileName);
         long ftpFileSize = 0L;
         //创建远程目录，若存在则跳过
+
         createDir(remoteDir);
         FTPFile[] ftpFiles = ftpClient.listFiles(strUnicode(remoteFileName, UTF_8, ISO_8859_1));
         if (null != ftpFiles && ftpFiles.length > 0) {
@@ -272,6 +277,14 @@ public class FtpUtil {
 
             //本地文件长度(字节)
             long localFileSize = getFileSize(localFile);
+
+            if(!remotePath.startsWith("/")){
+                remotePath="/"+remotePath;
+            }
+            if(!remotePath.endsWith("/")){
+                remotePath=remotePath+"/";
+            }
+
             //远程文件大小(字节)
             long remoteSize = getFtpFileSize(remotePath, remoteFileName);
 
@@ -279,7 +292,7 @@ public class FtpUtil {
             ftpClient.setBufferSize(buffer.intValue());
             String remote = remotePath + remoteFileName;
 
-            raf = new RandomAccessFile(localFile, "r");
+            raf = new RandomAccessFile(localFile, "rw");
 
             //打印上传进度
             long process = 0L;
