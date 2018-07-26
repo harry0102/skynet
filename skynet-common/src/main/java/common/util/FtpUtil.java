@@ -150,11 +150,18 @@ public class FtpUtil {
      */
     public static void closeFtp() {
         if (ftpClient != null && ftpClient.isConnected()) {
+
             try {
                 ftpClient.logout();
+            } catch (IOException e) {
+                logger.error("FTP退出异常!",e);
+            }
+
+            try {
+
                 ftpClient.disconnect();
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("FTP断开连接异常!",e);
             }
         }
     }
@@ -303,6 +310,13 @@ public class FtpUtil {
             Long buffer = 1024 * 10L;
             ftpClient.setBufferSize(buffer.intValue());
             String remote = remotePath + remoteFileName;
+
+            if (remoteSize > localFileSize) {
+                boolean flag = ftpClient.deleteFile(strUnicode(remote, UTF_8, ISO_8859_1));
+                if (flag) {
+                    remoteSize = 0L;
+                }
+            }
 
             raf = new RandomAccessFile(localFile, "r");
 
