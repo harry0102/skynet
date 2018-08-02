@@ -1,0 +1,2 @@
+General;%BitRate%|%FileSize%|%Duration%|
+Video;%Width%|%Height%|%FrameRate%|%DisplayAspectRatio%|%BitRate%

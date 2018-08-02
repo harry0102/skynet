@@ -149,21 +149,22 @@ public class FtpUtil {
      * @date 2018/7/25 13:46
      */
     public static void closeFtp() {
-        if (ftpClient != null && ftpClient.isConnected()) {
 
-            try {
-                ftpClient.logout();
-            } catch (IOException e) {
-                logger.error("FTP退出异常!",e);
-            }
-
-            try {
-
-                ftpClient.disconnect();
-            } catch (IOException e) {
-                logger.error("FTP断开连接异常!",e);
+        try {
+            ftpClient.logout();
+        } catch (IOException e) {
+            logger.error("FTP退出异常!", e);
+        } finally {
+            if (ftpClient.isConnected()) {
+                try {
+                    ftpClient.disconnect();
+                } catch (Exception e) {
+                    logger.error("FTP断开连接异常!", e);
+                }
             }
         }
+
+
     }
 
 
@@ -272,9 +273,8 @@ public class FtpUtil {
      * @param remotePath
      * @param remoteFileName
      * @return boolean
-     * @descrption
-     * 本地文件上传到指定ftp目录
-     *
+     * @descrption 本地文件上传到指定ftp目录
+     * <p>
      * commons-net的FTPClient，在使用public InputStream retrieveFileStream(String remote)
      * 方法时需要特别注意，在调用这个接口后，一定要手动close掉返回的InputStream，然后再调用completePendingCommand方法，若不是按照这个顺序，则不对，伪代码：
      * InputStream is = ftpClient.retrieveFileStream(remote);
@@ -286,7 +286,7 @@ public class FtpUtil {
      */
     public boolean upload(String localFile, String remotePath, String remoteFileName) throws Exception {
 
-        boolean success = false;
+        boolean success = true;
         RandomAccessFile raf = null;
         OutputStream ftpOut = null;
         try {
@@ -304,7 +304,7 @@ public class FtpUtil {
             //远程文件大小(字节)
             long remoteSize = getFtpFileSize(remotePath, remoteFileName);
             if (remoteSize == localFileSize) {
-                return false;
+                return true;
             }
 
             Long buffer = 1024 * 10L;
@@ -349,6 +349,7 @@ public class FtpUtil {
 
 
         } catch (Exception e) {
+            success = false;
             logger.error("上传文件到FTP异常！", e);
         } finally {
             try {
