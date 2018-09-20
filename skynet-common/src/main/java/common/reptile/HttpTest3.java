@@ -4,6 +4,7 @@ import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -28,48 +29,71 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
 
 /**
+ * @author MingRuiRen
  * @return
  * @descrption 爬虫2.0
- * @author MingRuiRen
  * @date 2018/9/20 14:38
  */
 public class HttpTest3 {
 
     private static final String UTF_8 = "utf-8";
 
-   /**
-    * @param args
-    * @return void
-    * @descrption
-    * @author MingRuiRen
-    * @date 2018/7/10 14:31
-    */
-   public static void main(String[] args) throws IOException {
+    /**
+     * @param args
+     * @return void
+     * @descrption
+     * @author MingRuiRen
+     * @date 2018/7/10 14:31
+     */
+    public static void main(String[] args) throws IOException {
 
-       //获取页面
-       String    url = "http://v.baidu.com/";
-       // HtmlUnit 模拟浏览器
-       WebClient webClient = new WebClient(BrowserVersion.CHROME);
-       webClient.getOptions().setJavaScriptEnabled(true);              // 启用JS解释器，默认为true
-       webClient.getOptions().setCssEnabled(false);                    // 禁用css支持
-       webClient.getOptions().setThrowExceptionOnScriptError(false);   // js运行错误时，是否抛出异常
-       webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-       webClient.getOptions().setTimeout(10 * 1000);                   // 设置连接超时时间
-       HtmlPage page = webClient.getPage(url);
-       webClient.waitForBackgroundJavaScript(5 * 1000);               // 等待js后台执行30秒
+        String keyword = "疯狂金车";
 
-       HtmlInput htmlInput = page.getHtmlElementById("new-bdvSearchInput");
-       htmlInput.setValueAttribute("特种保镖");
-       HtmlInput btn = page.getHtmlElementById("new-bdvSearchBtn");
-       HtmlPage page2=btn.click();
+        try {
+            keyword = java.net.URLEncoder.encode(keyword, "UTF-8");
+            System.out.println(keyword);
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
+        String url = "http://v.baidu.com/v?ie=utf-8&word="+keyword;
 
 
-       Document doc=Jsoup.parse( page2.asXml());
-       System.out.println(doc.toString());
+        // 屏蔽HtmlUnit等系统 log
+        LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log","org.apache.commons.logging.impl.NoOpLog");
+        java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
+        java.util.logging.Logger.getLogger("org.apache.http.client").setLevel(Level.OFF);
 
+        //构造一个webClient 模拟Chrome 浏览器
+        WebClient webClient = new WebClient(BrowserVersion.CHROME);
 
+        // 启用JS解释器，默认为true
+        webClient.getOptions().setJavaScriptEnabled(true);
+        // 禁用css支持
+        webClient.getOptions().setCssEnabled(false);
+        webClient.getOptions().setActiveXNative(false);
+        webClient.getOptions().setCssEnabled(false);
+        // js运行错误时，是否抛出异常
+        webClient.getOptions().setThrowExceptionOnScriptError(false);
+        webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+        // 设置连接超时时间
+        webClient.getOptions().setTimeout(5000);
+        HtmlPage rootPage = null;
+        try {
+            rootPage = webClient.getPage(url);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        // 等待js后台执行5秒
+        webClient.waitForBackgroundJavaScript(5000);
+        String html = rootPage.asXml();
+        Document document = Jsoup.parse(html);
+        System.out.println("html:"+document);
+
+        webClient.close();
 
     }
 
@@ -100,7 +124,7 @@ public class HttpTest3 {
 
             try {
 
-                programName= URLEncoder.encode(programName, UTF_8);
+                programName = URLEncoder.encode(programName, UTF_8);
 //                url = "http://v.baidu.com/v?word="+programName+"&ct=301989888&rn=67&pn=0&db=0&s=0&fbl=800&ie=utf-8" ;
                 url = "http://v.baidu.com/v?word=%E5%A6%82%E6%87%BF%E4%BC%A0&ct=301989888&rn=67&pn=0&db=0&s=0&fbl=800&ie=utf-8";
                 HttpGet getMethodSearch = new HttpGet(url);
@@ -121,10 +145,9 @@ public class HttpTest3 {
                 System.out.println(page.toString());
 
                 //百度百科-版权
-               List<String> list = printContent(null, null);
+                List<String> list = printContent(null, null);
 
-               getCellIntroduction( row, list);
-
+                getCellIntroduction(row, list);
 
 
             } catch (UnsupportedEncodingException e) {
@@ -151,7 +174,7 @@ public class HttpTest3 {
         }
     }
 
-    private static void getCellIntroduction( Row row,List<String> list) {
+    private static void getCellIntroduction(Row row, List<String> list) {
 
         setCellValue0(row, list);
 
@@ -167,11 +190,11 @@ public class HttpTest3 {
      * @date 2018/6/15 22:40
      */
     private static List<String> printContent(Document doc, String s) {
-        s="info-wrap";
-        s="j-more more-list-wrap";
-        s="intro-item";
-        s="sites arrow-tip";
-        List<String> list =new ArrayList<>();
+        s = "info-wrap";
+        s = "j-more more-list-wrap";
+        s = "intro-item";
+        s = "sites arrow-tip";
+        List<String> list = new ArrayList<>();
         System.out.println(doc);
         Elements dt = doc.getElementsByClass(s).select("a");
 
@@ -185,15 +208,13 @@ public class HttpTest3 {
 
 
     private static void setCellValue0(Row row, List<String> list) {
-       for(int i=0;i<list.size();i++){
-           String key =list.get(i);
-           row.getCell(i+2).setCellValue(key);
-       }
+        for (int i = 0; i < list.size(); i++) {
+            String key = list.get(i);
+            row.getCell(i + 2).setCellValue(key);
+        }
 
 
     }
-
-
 
 
 }

@@ -5,6 +5,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.sun.media.sound.SoftTuning;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -21,6 +22,7 @@ import org.jsoup.select.Elements;
 import java.io.*;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * @author MingRuiRen
@@ -95,7 +97,7 @@ public class HttpTest2 {
 
 
         int i = 0;
-        String programName = "";
+        String keyword = "";
         String url = "";
 
         for (Row row : sheet1) {
@@ -103,44 +105,56 @@ public class HttpTest2 {
             if (i == 1) {
                 continue;
             }
-            programName = row.getCell(1).getStringCellValue();
-            System.out.println("sheet" + sheetIndex + "  row " + i + " " + programName);
+            keyword = row.getCell(1).getStringCellValue();
+            System.out.println("sheet" + sheetIndex + "  row " + i + " " + keyword);
 
 
             try {
-
-                //获取页面
-                url = "http://v.baidu.com/";
-                // HtmlUnit 模拟浏览器
-                WebClient webClient = new WebClient(BrowserVersion.FIREFOX_52);
-                webClient.getOptions().setJavaScriptEnabled(true);              // 启用JS解释器，默认为true
-                webClient.getOptions().setCssEnabled(false);                    // 禁用css支持
-                webClient.getOptions().setThrowExceptionOnScriptError(false);   // js运行错误时，是否抛出异常
-                webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-                webClient.getOptions().setTimeout(5 * 1000);                   // 设置连接超时时间
-                HtmlPage page = webClient.getPage(url);
-                webClient.waitForBackgroundJavaScript(5* 1000);               // 等待js后台执行30秒
-
-                HtmlInput htmlInput = page.getHtmlElementById("new-bdvSearchInput");
-                htmlInput.setValueAttribute(programName);
-                HtmlInput btn = page.getHtmlElementById("new-bdvSearchBtn");
-                HtmlPage page2 = btn.click();
-
-                Document doc = Jsoup.parse(page2.asXml());
-
-                String copyright = "sites arrow-tip";
-
-                //百度视频-版权
-                Set<String> list = printContent(doc, copyright);
-
-                getCellIntroduction(row, list);
-
-
+                keyword = java.net.URLEncoder.encode(keyword, "UTF-8");
+                System.out.println(keyword);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
+            }
+
+            url = "http://v.baidu.com/v?ie=utf-8&word=" + keyword;
+
+
+            // 屏蔽HtmlUnit等系统 log
+            LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+            java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
+            java.util.logging.Logger.getLogger("org.apache.http.client").setLevel(Level.OFF);
+
+            //构造一个webClient 模拟Chrome 浏览器
+            WebClient webClient = new WebClient(BrowserVersion.CHROME);
+
+            // 启用JS解释器，默认为true
+            webClient.getOptions().setJavaScriptEnabled(true);
+            // 禁用css支持
+            webClient.getOptions().setCssEnabled(false);
+            webClient.getOptions().setActiveXNative(false);
+            webClient.getOptions().setCssEnabled(false);
+            // js运行错误时，是否抛出异常
+            webClient.getOptions().setThrowExceptionOnScriptError(false);
+            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            // 设置连接超时时间
+            webClient.getOptions().setTimeout(5000);
+            HtmlPage rootPage = null;
+            try {
+                rootPage = webClient.getPage(url);
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            // 等待js后台执行5秒
+            webClient.waitForBackgroundJavaScript(5000);
+            String html = rootPage.asXml();
+            Document document = Jsoup.parse(html);
+
+            String copyright = "sites arrow-tip";
+
+            //百度视频-版权
+            Set<String> list = printContent(document, copyright);
+
+            getCellIntroduction(row, list);
 
 
             if (i == 10) {
@@ -150,7 +164,7 @@ public class HttpTest2 {
         }
     }
 
-    private static void getCellIntroduction(Row row,Set<String>  list) {
+    private static void getCellIntroduction(Row row, Set<String> list) {
 
         setCellValue0(row, list);
 
@@ -179,8 +193,8 @@ public class HttpTest2 {
     }
 
 
-    private static void setCellValue0(Row row, Set<String>  list) {
-        int i=1;
+    private static void setCellValue0(Row row, Set<String> list) {
+        int i = 1;
         for (String str : list) {
             i++;
             row.getCell(i).setCellValue(str);
