@@ -33,6 +33,11 @@ import java.util.logging.Level;
 public class HttpTest2 {
 
     private static final String UTF_8 = "utf-8";
+    private static final String filenName = "D:\\附件三基础电影电视剧片单.xls";
+    static int sheetIndex=0;
+    static int begin=4500;
+    static int end =6000;
+
 
     /**
      * @param args
@@ -43,10 +48,10 @@ public class HttpTest2 {
      */
     public static void main(String[] args) {
 
-
+        String newFileName="D:\\附件三基础电影电视剧片单"+begin+"-"+end+".xls";
         long startTime = System.currentTimeMillis();
-        File f = new File("D:\\附件三基础电影电视剧片单.xls");
-        File fout = new File("D:\\附件三基础电影电视剧片单3.xls");
+        File f = new File(filenName);
+        File fout = new File(newFileName);
         HSSFWorkbook xssfWorkbook;
 
         try {
@@ -65,7 +70,6 @@ public class HttpTest2 {
 //            }
 
 //        输出指定索引sheet
-            int sheetIndex = 0;
             sheet = xssfWorkbook.getSheetAt(sheetIndex);
             setSheetCellValuie(sheetIndex, sheet);
 
@@ -96,68 +100,59 @@ public class HttpTest2 {
     private static void setSheetCellValuie(int sheetIndex, HSSFSheet sheet1) {
 
 
-        int i = 0;
         String keyword = "";
         String url = "";
+        // 屏蔽HtmlUnit等系统 log
+        LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
+        java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
+        java.util.logging.Logger.getLogger("org.apache.http.client").setLevel(Level.OFF);
 
-        for (Row row : sheet1) {
-            i++;
-            if (i == 1) {
-                continue;
-            }
+        //构造一个webClient 模拟Chrome 浏览器
+        WebClient webClient = new WebClient(BrowserVersion.CHROME);
+
+        // 启用JS解释器，默认为true
+        webClient.getOptions().setJavaScriptEnabled(true);
+        // 禁用css支持
+        webClient.getOptions().setCssEnabled(false);
+        webClient.getOptions().setActiveXNative(false);
+        webClient.getOptions().setCssEnabled(false);
+        // js运行错误时，是否抛出异常
+        webClient.getOptions().setThrowExceptionOnScriptError(false);
+        webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+        // 设置连接超时时间
+        webClient.getOptions().setTimeout(5000);
+        // 等待js后台执行5秒
+        webClient.waitForBackgroundJavaScript(5000);
+        HtmlPage rootPage = null;
+        String copyright = "sites arrow-tip";
+
+        for (int i=begin;i<sheet1.getLastRowNum();i++) {
+
+            Row row=sheet1.getRow(i);
             keyword = row.getCell(1).getStringCellValue();
             System.out.println("sheet" + sheetIndex + "  row " + i + " " + keyword);
 
-
             try {
                 keyword = java.net.URLEncoder.encode(keyword, "UTF-8");
-                System.out.println(keyword);
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
 
             url = "http://v.baidu.com/v?ie=utf-8&word=" + keyword;
-
-
-            // 屏蔽HtmlUnit等系统 log
-            LogFactory.getFactory().setAttribute("org.apache.commons.logging.Log", "org.apache.commons.logging.impl.NoOpLog");
-            java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(Level.OFF);
-            java.util.logging.Logger.getLogger("org.apache.http.client").setLevel(Level.OFF);
-
-            //构造一个webClient 模拟Chrome 浏览器
-            WebClient webClient = new WebClient(BrowserVersion.CHROME);
-
-            // 启用JS解释器，默认为true
-            webClient.getOptions().setJavaScriptEnabled(true);
-            // 禁用css支持
-            webClient.getOptions().setCssEnabled(false);
-            webClient.getOptions().setActiveXNative(false);
-            webClient.getOptions().setCssEnabled(false);
-            // js运行错误时，是否抛出异常
-            webClient.getOptions().setThrowExceptionOnScriptError(false);
-            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
-            // 设置连接超时时间
-            webClient.getOptions().setTimeout(5000);
-            HtmlPage rootPage = null;
             try {
                 rootPage = webClient.getPage(url);
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            // 等待js后台执行5秒
-            webClient.waitForBackgroundJavaScript(5000);
+
             String html = rootPage.asXml();
             Document document = Jsoup.parse(html);
 
-            String copyright = "sites arrow-tip";
-
             //百度视频-版权
             Set<String> list = printContent(document, copyright);
-
             getCellIntroduction(row, list);
 
-
-            if (i == 10) {
+            if (i == end) {
                 break;
             }
 
@@ -197,7 +192,13 @@ public class HttpTest2 {
         int i = 1;
         for (String str : list) {
             i++;
-            row.getCell(i).setCellValue(str);
+            if(row.getCell(i) == null){
+                row.createCell(i).setCellValue(str);
+            }else {
+                row.getCell(i).setCellValue(str);
+
+            }
+
         }
     }
 
