@@ -10,7 +10,6 @@
  */
 package common.util.jaxb;
 
-import com.sun.media.sound.SoftTuning;
 import org.junit.jupiter.api.Test;
 
 import javax.xml.bind.JAXBContext;

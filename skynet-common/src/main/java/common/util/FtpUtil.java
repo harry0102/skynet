@@ -13,7 +13,6 @@ package common.util;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPReply;
-import org.jcp.xml.dsig.internal.SignerOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

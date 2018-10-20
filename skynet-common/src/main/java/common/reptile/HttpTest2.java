@@ -2,16 +2,8 @@ package common.reptile;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlInput;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.sun.media.sound.SoftTuning;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Row;
@@ -20,8 +12,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
 
 import java.io.*;
-import java.net.URLEncoder;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 
 /**
@@ -34,9 +26,9 @@ public class HttpTest2 {
 
     private static final String UTF_8 = "utf-8";
     private static final String filenName = "D:\\附件三基础电影电视剧片单.xls";
-    static int sheetIndex=0;
-    static int begin=4500;
-    static int end =6000;
+    static int sheetIndex=1;
+    static int begin=1;
+    static int end =5;
 
 
     /**
@@ -129,6 +121,7 @@ public class HttpTest2 {
         for (int i=begin;i<sheet1.getLastRowNum();i++) {
 
             Row row=sheet1.getRow(i);
+            System.out.println(">>>"+i);
             keyword = row.getCell(1).getStringCellValue();
             System.out.println("sheet" + sheetIndex + "  row " + i + " " + keyword);
 
